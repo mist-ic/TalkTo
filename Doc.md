@@ -78,7 +78,7 @@ FE->>U: Displays animated chat output
 ## 4. Directory Structure
 
 Our project will be organized as follows (proposed):
-
+```
 TalkToAi/
 ├── public/
 │ └── characters/
@@ -101,7 +101,7 @@ TalkToAi/
 ├── docs/ # Developer documentation
 ├── package.json # Project configuration and dependencies
 └── wrangler.toml # Cloudflare Workers configuration
-
+```
 ---
 
 ## 5. Environment Setup
