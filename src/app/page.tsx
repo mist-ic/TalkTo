@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import { useChatStream } from '@/hooks/useChatStream';
-import type { Character } from '@/types/character';
+import type { Character, ToneType } from '@/types/character';
 
 // Dynamically import components
 const CharacterCard = dynamic(() => import('@/components/CharacterCard').then(mod => mod.CharacterCard), {
@@ -33,13 +33,17 @@ const ChatStreamSkeleton = () => (
 export default function Home() {
   const [characters, setCharacters] = useState<Character[]>([]);
   const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
+  const [selectedTone, setSelectedTone] = useState<ToneType>('original');
   const [isLoading, setIsLoading] = useState(true);
-  const { messages, isLoading: chatIsLoading, sendMessage } = useChatStream(selectedCharacter || characters[0]);
+
+  const { messages, isLoading: chatIsLoading, sendMessage } = useChatStream(
+    selectedCharacter || characters[0],
+    selectedTone
+  );
 
   useEffect(() => {
     const loadCharacters = async () => {
       try {
-        // Dynamically import character data
         const gandhi = (await import('../../public/characters/gandhi.json')).default;
         setCharacters([gandhi]);
       } catch (error) {
@@ -52,6 +56,12 @@ export default function Home() {
     loadCharacters();
   }, []);
 
+  const handleCharacterSelect = (character: Character) => {
+    setSelectedCharacter(character);
+    // Reset tone to original when selecting a new character
+    setSelectedTone('original');
+  };
+
   return (
     <main className="flex min-h-screen bg-gray-950">
       {/* Character Selection */}
@@ -63,7 +73,9 @@ export default function Home() {
               key={character.id}
               character={character}
               isSelected={selectedCharacter?.id === character.id}
-              onClick={setSelectedCharacter}
+              onClick={handleCharacterSelect}
+              onToneSelect={setSelectedTone}
+              selectedTone={selectedTone}
             />
           ))}
         </div>

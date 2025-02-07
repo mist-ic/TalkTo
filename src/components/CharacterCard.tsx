@@ -2,9 +2,14 @@
 
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import type { CharacterCardProps } from '@/types/character';
+import type { CharacterCardProps, ToneType } from '@/types/character';
 
-export const CharacterCard = ({ character, onClick, isSelected }: CharacterCardProps) => {
+export const CharacterCard = ({ character, onClick, isSelected, onToneSelect, selectedTone }: CharacterCardProps) => {
+  const handleToneSelect = (e: React.MouseEvent, tone: ToneType) => {
+    e.stopPropagation();
+    onToneSelect?.(tone);
+  };
+
   return (
     <motion.div
       onClick={() => onClick(character)}
@@ -53,6 +58,33 @@ export const CharacterCard = ({ character, onClick, isSelected }: CharacterCardP
             </span>
           ))}
         </div>
+
+        {/* Tone Selection */}
+        {isSelected && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-4 space-y-2"
+          >
+            <p className="text-sm font-medium text-gray-300">Choose tone:</p>
+            <div className="flex gap-2">
+              {(['original', 'millennial', 'genZ'] as const).map((tone) => (
+                <button
+                  key={tone}
+                  onClick={(e) => handleToneSelect(e, tone)}
+                  className={`
+                    px-3 py-1 text-xs rounded-full transition-colors
+                    ${selectedTone === tone 
+                      ? 'bg-blue-500 text-white' 
+                      : 'bg-gray-800/80 text-gray-300 hover:bg-gray-700/80'}
+                  `}
+                >
+                  {tone === 'original' ? 'Original' : tone === 'millennial' ? 'Millennial' : 'Gen Z'}
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
       </motion.div>
     </motion.div>
   );
