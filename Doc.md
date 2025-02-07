@@ -57,7 +57,7 @@ Welcome to the TalkToAi developer documentation! This document is designed to he
 ## 3. System Architecture Overview
 
 Below is a simplified sequence diagram illustrating how the system components interact(proposed):
-
+```
 mermaid
 sequenceDiagram
 participant U as User
@@ -71,7 +71,7 @@ CF->>G: Proxies the request to Gemini 2.0 Flash API
 G-->>CF: Streams character-specific response
 CF-->>FE: Streams the response back to the client
 FE->>U: Displays animated chat output
-
+```
 
 ---
 
