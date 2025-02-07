@@ -1,21 +1,56 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CharacterCard } from '@/components/CharacterCard';
-import { ChatStream } from '@/components/ChatStream';
+import dynamic from 'next/dynamic';
 import { useChatStream } from '@/hooks/useChatStream';
 import type { Character } from '@/types/character';
 
-// Import character data
-import gandhi from '../../public/characters/gandhi.json';
+// Dynamically import components
+const CharacterCard = dynamic(() => import('@/components/CharacterCard').then(mod => mod.CharacterCard), {
+  loading: () => <CharacterCardSkeleton />
+});
 
-// For now, we'll use a static list of characters
-const characters: Character[] = [gandhi];
+const ChatStream = dynamic(() => import('@/components/ChatStream').then(mod => mod.ChatStream), {
+  loading: () => <ChatStreamSkeleton />
+});
+
+// Loading skeletons
+const CharacterCardSkeleton = () => (
+  <div className="animate-pulse bg-gray-800 rounded-xl aspect-[3/4] w-full max-w-sm" />
+);
+
+const ChatStreamSkeleton = () => (
+  <div className="flex-1 animate-pulse bg-gray-900 p-4">
+    <div className="h-4 bg-gray-800 rounded w-1/4 mb-4" />
+    <div className="space-y-3">
+      <div className="h-10 bg-gray-800 rounded w-3/4" />
+      <div className="h-10 bg-gray-800 rounded w-1/2" />
+    </div>
+  </div>
+);
 
 export default function Home() {
+  const [characters, setCharacters] = useState<Character[]>([]);
   const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
-  const { messages, isLoading, sendMessage } = useChatStream(selectedCharacter || characters[0]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { messages, isLoading: chatIsLoading, sendMessage } = useChatStream(selectedCharacter || characters[0]);
+
+  useEffect(() => {
+    const loadCharacters = async () => {
+      try {
+        // Dynamically import character data
+        const gandhi = (await import('../../public/characters/gandhi.json')).default;
+        setCharacters([gandhi]);
+      } catch (error) {
+        console.error('Failed to load characters:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadCharacters();
+  }, []);
 
   return (
     <main className="flex min-h-screen bg-gray-950">
@@ -46,7 +81,7 @@ export default function Home() {
             <ChatStream
               messages={messages}
               character={selectedCharacter}
-              isLoading={isLoading}
+              isLoading={chatIsLoading}
               onSendMessage={sendMessage}
             />
           </motion.div>
