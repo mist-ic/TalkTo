@@ -30,7 +30,7 @@ yarn-error.log*
 .env.development
 .env.test
 .env.production
-
+.cursorrules
 # vercel
 .vercel
 

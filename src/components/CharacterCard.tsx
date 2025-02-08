@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { StarBorder } from './ui/star-border';
 import type { CharacterCardProps, ToneType } from '@/types/character';
+import { useState } from 'react';
 
 export const CharacterCard = ({ 
   character, 
@@ -15,9 +16,14 @@ export const CharacterCard = ({
   isFavorite,
   onFavoriteToggle
 }: CharacterCardProps) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+
   const handleToneSelect = (e: React.MouseEvent, tone: ToneType) => {
     e.stopPropagation();
     onToneSelect?.(tone);
+    if (onToneSelect) {
+      onClick(character);
+    }
   };
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
@@ -25,12 +31,22 @@ export const CharacterCard = ({
     onFavoriteToggle();
   };
 
+  const handleCardClick = () => {
+    if (!isSelected && !isExpanded) {
+      setIsExpanded(true);
+    }
+  };
+
   const CardContent = (
     <motion.div
-      onClick={() => onClick(character)}
-      className="relative w-72 h-96 rounded-xl cursor-pointer bg-gradient-to-b from-gray-800 to-gray-900 hover:shadow-xl transition-shadow"
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
+      onClick={handleCardClick}
+      className={`
+        relative w-72 h-96 rounded-xl cursor-pointer bg-gradient-to-b from-gray-800 to-gray-900 
+        hover:shadow-xl transition-shadow
+        ${isSelected || isExpanded ? 'cursor-default' : 'hover:scale-[1.02]'}
+      `}
+      whileHover={!isSelected && !isExpanded ? { scale: 1.02 } : {}}
+      whileTap={!isSelected && !isExpanded ? { scale: 0.98 } : {}}
       layout
     >
       {/* Character Image Container */}
@@ -40,7 +56,7 @@ export const CharacterCard = ({
             src={character.imageUrl}
             alt={character.name}
             fill
-            className="object-cover opacity-80"
+            className={`object-cover transition-opacity duration-300 ${isSelected ? 'opacity-40' : 'opacity-80'}`}
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             priority
           />
@@ -107,26 +123,35 @@ export const CharacterCard = ({
         </div>
 
         {/* Tone Selection */}
-        {isSelected && (
+        {(isSelected || isExpanded) && (
           <motion.div 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mt-4 space-y-2"
+            className="mt-6"
           >
-            <p className="text-sm font-medium text-gray-300">Choose tone:</p>
-            <div className="flex gap-2">
+            <p className="text-lg font-medium text-white mb-3">Choose your conversation style:</p>
+            <div className="space-y-3">
               {(['original', 'millennial', 'genZ'] as const).map((tone) => (
                 <button
                   key={tone}
                   onClick={(e) => handleToneSelect(e, tone)}
                   className={`
-                    px-3 py-1 text-xs rounded-full transition-colors
+                    w-full py-3 px-4 rounded-xl text-left transition-all
                     ${selectedTone === tone 
-                      ? 'bg-blue-500 text-white' 
+                      ? 'bg-blue-500 text-white shadow-lg scale-[1.02]' 
                       : 'bg-gray-800/80 text-gray-300 hover:bg-gray-700/80'}
                   `}
                 >
-                  {tone === 'original' ? 'Original' : tone === 'millennial' ? 'Millennial' : 'Gen Z'}
+                  <div className="font-medium mb-1">
+                    {tone === 'original' ? 'Original' : tone === 'millennial' ? 'Millennial' : 'Gen Z'}
+                  </div>
+                  <div className="text-xs opacity-80">
+                    {tone === 'original' 
+                      ? 'Classic historical personality' 
+                      : tone === 'millennial' 
+                        ? 'Modern casual conversation' 
+                        : 'Ultra-casual with current slang'}
+                  </div>
                 </button>
               ))}
             </div>

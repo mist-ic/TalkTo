@@ -110,12 +110,21 @@ export default function ChatPage() {
 
   const handleCharacterSelect = (character: Character) => {
     setSelectedCharacter(character);
-    setSelectedTone('original');
-    setIsChatOpen(true);
+    // Don't open chat yet, wait for tone selection
+  };
+
+  const handleToneSelect = (tone: ToneType) => {
+    setSelectedTone(tone);
+    setIsChatOpen(true); // Only open chat after tone is selected
+  };
+
+  const handleToneChange = (tone: ToneType) => {
+    setSelectedTone(tone);
   };
 
   const handleCloseChatModal = () => {
     setIsChatOpen(false);
+    setSelectedCharacter(null);
   };
 
   const handleSendMessage = async (message: string) => {
@@ -214,7 +223,7 @@ export default function ChatPage() {
                         character={character}
                         isSelected={selectedCharacter?.id === character.id}
                         onClick={handleCharacterSelect}
-                        onToneSelect={setSelectedTone}
+                        onToneSelect={handleToneSelect}
                         selectedTone={selectedTone}
                         messageCount={chatHistories[character.id]?.length || 0}
                         isFavorite={favorites.has(character.id)}
@@ -235,7 +244,7 @@ export default function ChatPage() {
                         character={character}
                         isSelected={selectedCharacter?.id === character.id}
                         onClick={handleCharacterSelect}
-                        onToneSelect={setSelectedTone}
+                        onToneSelect={handleToneSelect}
                         selectedTone={selectedTone}
                         messageCount={chatHistories[character.id]?.length || 0}
                         isFavorite={favorites.has(character.id)}
@@ -256,7 +265,7 @@ export default function ChatPage() {
                         character={character}
                         isSelected={selectedCharacter?.id === character.id}
                         onClick={handleCharacterSelect}
-                        onToneSelect={setSelectedTone}
+                        onToneSelect={handleToneSelect}
                         selectedTone={selectedTone}
                         messageCount={chatHistories[character.id]?.length || 0}
                         isFavorite={favorites.has(character.id)}
@@ -331,51 +340,17 @@ export default function ChatPage() {
       </div>
 
       {/* Chat Modal */}
-      <AnimatePresence>
-        {isChatOpen && selectedCharacter && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
-            onClick={handleCloseChatModal}
-          >
-            <motion.div
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              className="absolute inset-x-0 bottom-0 top-20 bg-gray-900 rounded-t-2xl shadow-xl"
-              onClick={e => e.stopPropagation()}
-            >
-              {/* Modal Header */}
-              <div className="flex items-center justify-between p-4 border-b border-gray-800">
-                <div className="flex items-center gap-4">
-                  <h3 className="text-xl font-semibold text-white">{selectedCharacter.name}</h3>
-                  <span className="text-sm text-gray-400">{selectedCharacter.title}</span>
-                </div>
-                <button
-                  onClick={handleCloseChatModal}
-                  className="p-2 text-gray-400 hover:text-white transition-colors"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-
-              {/* Chat Content */}
-              <div className="h-[calc(100%-4rem)] overflow-hidden">
-                <ChatStream
-                  messages={chatHistories[selectedCharacter.id] || []}
-                  character={selectedCharacter}
-                  isLoading={chatIsLoading}
-                  onSendMessage={handleSendMessage}
-                />
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {isChatOpen && selectedCharacter && (
+        <ChatStream
+          messages={messages}
+          character={selectedCharacter}
+          isLoading={chatIsLoading}
+          onSendMessage={handleSendMessage}
+          onClose={handleCloseChatModal}
+          tone={selectedTone}
+          onToneChange={handleToneChange}
+        />
+      )}
     </main>
   );
 } 
