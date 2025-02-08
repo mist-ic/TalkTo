@@ -55,14 +55,7 @@ export const useChatStream = (character: Character, tone: ToneType = 'original')
     }
   };
 
-  const sendMessage = useCallback(async (content: string) => {
-    const userMessage: ChatMessage = {
-      id: `user-${Date.now()}`,
-      role: 'user',
-      content,
-      timestamp: Date.now(),
-    };
-    setMessages(prev => [...prev, userMessage]);
+  const sendMessage = useCallback(async (content: string): Promise<ChatMessage | null> => {
     setIsLoading(true);
 
     try {
@@ -70,27 +63,27 @@ export const useChatStream = (character: Character, tone: ToneType = 'original')
       const contextWithTone = `${character.chat_context}\n\n${toneModifier}`;
 
       const data = await makeApiCall(content, contextWithTone);
+      const responseText = data.candidates[0].content.parts[0].text;
 
-      setMessages(prev => [
-        ...prev,
-        {
-          id: `assistant-${Date.now()}`,
-          role: 'assistant',
-          content: data.candidates[0].content.parts[0].text,
-          timestamp: Date.now(),
-        },
-      ]);
+      const assistantMessage: ChatMessage = {
+        id: `assistant-${Date.now()}`,
+        role: 'assistant',
+        content: responseText,
+        timestamp: Date.now(),
+      };
+
+      setMessages(prev => [...prev, assistantMessage]);
+      return assistantMessage;
     } catch (error) {
       console.error('Chat error after all retries:', error);
-      setMessages(prev => [
-        ...prev,
-        {
-          id: `error-${Date.now()}`,
-          role: 'assistant',
-          content: 'I apologize, but I encountered multiple errors while trying to respond. Please try again later.',
-          timestamp: Date.now(),
-        },
-      ]);
+      const errorMessage: ChatMessage = {
+        id: `error-${Date.now()}`,
+        role: 'assistant',
+        content: 'I apologize, but I encountered an error while trying to respond. Please try again later.',
+        timestamp: Date.now(),
+      };
+      setMessages(prev => [...prev, errorMessage]);
+      return null;
     } finally {
       setIsLoading(false);
     }

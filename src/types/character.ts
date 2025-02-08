@@ -34,6 +34,9 @@ export interface CharacterCardProps {
   isSelected: boolean;
   onToneSelect?: (tone: ToneType) => void;
   selectedTone?: ToneType;
+  messageCount: number;
+  isFavorite: boolean;
+  onFavoriteToggle: () => void;
 }
 
 // Type for the chat message

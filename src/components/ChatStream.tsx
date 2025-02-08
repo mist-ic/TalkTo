@@ -2,6 +2,7 @@
 
 import { useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatedMessage } from '@/components/ui/AnimatedMessage';
 import type { ChatMessage, Character } from '@/types/character';
 
 interface ChatStreamProps {
@@ -60,6 +61,15 @@ export const ChatStream = ({ messages, character, isLoading, onSendMessage }: Ch
               exit={{ opacity: 0, y: -20 }}
               className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
+              {message.role === 'assistant' && (
+                <div className="w-8 h-8 rounded-full overflow-hidden mr-2 flex-shrink-0">
+                  <img
+                    src={character.imageUrl}
+                    alt={character.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
               <div
                 className={`
                   max-w-[80%] rounded-lg p-3
@@ -68,11 +78,22 @@ export const ChatStream = ({ messages, character, isLoading, onSendMessage }: Ch
                     : 'bg-gray-800 text-gray-100'}
                 `}
               >
-                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                {message.role === 'assistant' ? (
+                  <AnimatedMessage content={message.content} />
+                ) : (
+                  <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                )}
                 <span className="text-xs opacity-50 mt-1 block">
                   {new Date(message.timestamp).toLocaleTimeString()}
                 </span>
               </div>
+              {message.role === 'user' && (
+                <div className="w-8 h-8 rounded-full overflow-hidden ml-2 flex-shrink-0">
+                  <div className="w-full h-full bg-blue-500 flex items-center justify-center">
+                    <span className="text-sm font-medium text-white">You</span>
+                  </div>
+                </div>
+              )}
             </motion.div>
           ))}
         </AnimatePresence>

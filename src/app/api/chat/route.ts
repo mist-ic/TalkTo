@@ -15,12 +15,15 @@ export async function POST(request: Request) {
     const { message, characterId, context } = await request.json();
 
     if (!message || !characterId || !context) {
-      return new NextResponse('Missing required fields', { 
-        status: 400,
-        headers: {
-          'Cache-Control': 'no-store'
+      return new NextResponse(
+        JSON.stringify({ error: 'Missing required fields' }), 
+        { 
+          status: 400,
+          headers: {
+            'Content-Type': 'application/json',
+          }
         }
-      });
+      );
     }
 
     // Get the response from Gemini
@@ -32,21 +35,39 @@ export async function POST(request: Request) {
     // Get the response data
     const data = await response.json();
 
-    // Return response with caching headers
-    return NextResponse.json(data, {
+    // Validate response format
+    if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
+      throw new Error('Invalid response format from Gemini API');
+    }
+
+    // Return formatted response
+    return NextResponse.json({
+      candidates: [{
+        content: {
+          parts: [{
+            text: data.candidates[0].content.parts[0].text
+          }]
+        }
+      }]
+    }, {
       headers: {
-        ...CACHE_CONTROL_HEADERS,
         'Content-Type': 'application/json',
       }
     });
   } catch (error) {
     console.error('Chat API error:', error);
-    return new NextResponse('Internal server error', { 
-      status: 500,
-      headers: {
-        'Cache-Control': 'no-store'
+    return NextResponse.json(
+      { 
+        error: 'Failed to get response from AI',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      }, 
+      { 
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+        }
       }
-    });
+    );
   }
 }
 

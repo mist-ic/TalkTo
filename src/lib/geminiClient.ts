@@ -3,21 +3,20 @@ interface ChatRequest {
   context: string;
 }
 
-interface StreamResponse {
-  done: boolean;
-  value?: Uint8Array;
-}
-
 export class GeminiClient {
   private apiKey: string;
   private baseUrl: string;
 
   constructor(apiKey: string) {
     this.apiKey = apiKey;
-    this.baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite-preview-02-05:generateContent';
+    this.baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
   }
 
   async streamChat({ message, context }: ChatRequest): Promise<Response> {
+    if (!this.apiKey) {
+      throw new Error('Gemini API key is not configured');
+    }
+
     const response = await fetch(`${this.baseUrl}?key=${this.apiKey}`, {
       method: 'POST',
       headers: {
@@ -27,26 +26,18 @@ export class GeminiClient {
         contents: [
           {
             role: "user",
-            parts: [
-              {
-                text: context
-              }
-            ]
+            parts: [{ text: context }]
           },
           {
             role: "user",
-            parts: [
-              {
-                text: message
-              }
-            ]
+            parts: [{ text: message }]
           }
         ],
         generationConfig: {
-          temperature: 0.7,
-          topK: 1,
-          topP: 1,
-          maxOutputTokens: 2048,
+          temperature: 0.9,
+          topK: 40,
+          topP: 0.95,
+          maxOutputTokens: 1024,
         },
         safetySettings: [
           {
@@ -70,7 +61,12 @@ export class GeminiClient {
     });
 
     if (!response.ok) {
-      throw new Error(`Gemini API error: ${response.statusText}`);
+      const errorData = await response.json().catch(() => null);
+      throw new Error(
+        `Gemini API error: ${response.status} ${response.statusText}${
+          errorData ? ` - ${JSON.stringify(errorData)}` : ''
+        }`
+      );
     }
 
     return response;
