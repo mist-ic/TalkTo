@@ -21,11 +21,11 @@ const CharacterCardSkeleton = () => (
 );
 
 const ChatStreamSkeleton = () => (
-  <div className="flex-1 animate-pulse bg-gray-900 p-4">
-    <div className="h-4 bg-gray-800 rounded w-1/4 mb-4" />
-    <div className="space-y-3">
-      <div className="h-10 bg-gray-800 rounded w-3/4" />
-      <div className="h-10 bg-gray-800 rounded w-1/2" />
+  <div className="flex-1 p-6">
+    <div className="animate-pulse space-y-4">
+      <div className="h-4 bg-gray-800 rounded w-3/4" />
+      <div className="h-4 bg-gray-800 rounded w-1/2" />
+      <div className="h-4 bg-gray-800 rounded w-2/3" />
     </div>
   </div>
 );
@@ -44,8 +44,45 @@ export default function Home() {
   useEffect(() => {
     const loadCharacters = async () => {
       try {
-        const gandhi = (await import('../../public/characters/gandhi.json')).default;
-        setCharacters([gandhi]);
+        // Fetch all character JSON files
+        const responses = await Promise.all([
+          // Freedom Fighters
+          fetch('/characters/gandhi.json'),
+          fetch('/characters/bhagat.json'),
+          fetch('/characters/laxmibai.json'),
+          // Scientists
+          fetch('/characters/tesla.json'),
+          fetch('/characters/newton.json'),
+          fetch('/characters/einstein.json'),
+          // Military Leaders
+          fetch('/characters/shivaji.json'),
+          fetch('/characters/genghis.json'),
+          fetch('/characters/napolean.json')
+        ]);
+        
+        const characterData = await Promise.all(
+          responses.map(res => res.json())
+        );
+        
+        // Group characters by their expertise/field
+        const [
+          // Freedom Fighters
+          gandhi, bhagat, laxmibai,
+          // Scientists
+          tesla, newton, einstein,
+          // Military Leaders
+          shivaji, genghis, napolean
+        ] = characterData;
+        
+        // Set characters in a meaningful order
+        setCharacters([
+          // Freedom Fighters Group
+          gandhi, bhagat, laxmibai,
+          // Scientists Group
+          einstein, tesla, newton,
+          // Military Leaders Group
+          shivaji, genghis, napolean
+        ]);
       } catch (error) {
         console.error('Failed to load characters:', error);
       } finally {
@@ -67,17 +104,57 @@ export default function Home() {
       {/* Character Selection */}
       <div className="w-full md:w-1/3 p-6 overflow-y-auto">
         <h1 className="text-3xl font-bold text-white mb-6">TalkToAI</h1>
-        <div className="grid gap-6">
-          {characters.map((character) => (
-            <CharacterCard
-              key={character.id}
-              character={character}
-              isSelected={selectedCharacter?.id === character.id}
-              onClick={handleCharacterSelect}
-              onToneSelect={setSelectedTone}
-              selectedTone={selectedTone}
-            />
-          ))}
+        <div className="grid gap-8">
+          {/* Freedom Fighters Section */}
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold text-white mb-4">Freedom Fighters</h2>
+            <div className="grid gap-6">
+              {characters.slice(0, 3).map((character) => (
+                <CharacterCard
+                  key={character.id}
+                  character={character}
+                  isSelected={selectedCharacter?.id === character.id}
+                  onClick={handleCharacterSelect}
+                  onToneSelect={setSelectedTone}
+                  selectedTone={selectedTone}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Scientists Section */}
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold text-white mb-4">Scientists</h2>
+            <div className="grid gap-6">
+              {characters.slice(3, 6).map((character) => (
+                <CharacterCard
+                  key={character.id}
+                  character={character}
+                  isSelected={selectedCharacter?.id === character.id}
+                  onClick={handleCharacterSelect}
+                  onToneSelect={setSelectedTone}
+                  selectedTone={selectedTone}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Military Leaders Section */}
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold text-white mb-4">Military Leaders</h2>
+            <div className="grid gap-6">
+              {characters.slice(6, 9).map((character) => (
+                <CharacterCard
+                  key={character.id}
+                  character={character}
+                  isSelected={selectedCharacter?.id === character.id}
+                  onClick={handleCharacterSelect}
+                  onToneSelect={setSelectedTone}
+                  selectedTone={selectedTone}
+                />
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
