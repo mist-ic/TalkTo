@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "pages:build": "next build",
-    "deploy": "wrangler deploy"
+    "deploy": "wrangler deploy src/worker.ts"
   },
   "dependencies": {
     "@cloudflare/workers-types": "^4.20250204.0",

@@ -1,10 +1,9 @@
 name = "talkto"
 compatibility_date = "2024-02-09"
-main = ".next/server/app/api/chat/route.js"
+compatibility_flags = ["nodejs_compat"]
 
 [build]
 command = "npm run build"
-output_directory = ".next"
 
 [site]
 bucket = ".next"
