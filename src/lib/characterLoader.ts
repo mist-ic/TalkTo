@@ -6,7 +6,7 @@ interface CharacterCache {
   [key: string]: Character;
 }
 
-class CharacterLoader {
+export class CharacterLoader {
   private static instance: CharacterLoader;
   private cache: CharacterCache = {};
   private characterList: string[] = [

@@ -8,7 +8,7 @@ import { useTextToSpeech } from '@/hooks/useTextToSpeech';
 
 interface ChatStreamProps {
   messages: ChatMessage[];
-  character: Character;
+  character: Character | null;
   isLoading: boolean;
   onSendMessage: (message: string) => void;
   onClose: () => void;
@@ -99,14 +99,14 @@ export const ChatStream = ({
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-12 h-12 rounded-full overflow-hidden">
                     <img
-                      src={character.imageUrl}
-                      alt={character.name}
+                      src={character?.imageUrl}
+                      alt={character?.name}
                       className="w-full h-full object-cover"
                     />
                   </div>
                   <div>
-                    <h3 className="text-white font-medium">{character.name}</h3>
-                    <p className="text-gray-400 text-sm">{character.title}</p>
+                    <h3 className="text-white font-medium">{character?.name}</h3>
+                    <p className="text-gray-400 text-sm">{character?.title}</p>
                   </div>
                 </div>
 
@@ -191,8 +191,8 @@ export const ChatStream = ({
                 {message.role === 'assistant' && (
                   <div className="w-8 h-8 rounded-full overflow-hidden shrink-0">
                     <img
-                      src={character.imageUrl}
-                      alt={character.name}
+                      src={character?.imageUrl}
+                      alt={character?.name}
                       className="w-full h-full object-cover"
                     />
                   </div>
@@ -200,7 +200,7 @@ export const ChatStream = ({
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="font-medium text-white">
-                      {message.role === 'assistant' ? character.name : 'You'}
+                      {message.role === 'assistant' ? character?.name : 'You'}
                     </span>
                     <span className="text-xs text-gray-400">
                       {new Date(message.timestamp).toLocaleTimeString()}

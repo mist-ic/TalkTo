@@ -1,9 +1,8 @@
 "use client";
 
-import { motion, useMotionValue, useTransform, animate } from "framer-motion";
+import { motion } from 'framer-motion';
 import { Circle } from "lucide-react";
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { StarBorder } from "./star-border";
 

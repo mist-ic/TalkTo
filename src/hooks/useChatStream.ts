@@ -16,7 +16,7 @@ const RETRY_DELAY = 1000; // 1 second delay between retries
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-export const useChatStream = (character: Character | undefined, tone: ToneType = 'original') => {
+export const useChatStream = (character: Character | null, tone: ToneType = 'original') => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -25,9 +25,9 @@ export const useChatStream = (character: Character | undefined, tone: ToneType =
     if (character) {
       setMessages([]);
     }
-  }, [character?.id]);
+  }, [character]);
 
-  const makeApiCall = async (content: string, contextWithTone: string, attempt: number = 1): Promise<GeminiResponse> => {
+  const makeApiCall = useCallback(async (content: string, contextWithTone: string, attempt: number = 1): Promise<GeminiResponse> => {
     if (!character) {
       throw new Error('No character selected');
     }
@@ -64,7 +64,7 @@ export const useChatStream = (character: Character | undefined, tone: ToneType =
       }
       throw error;
     }
-  };
+  }, [character]);
 
   const sendMessage = useCallback(async (content: string): Promise<ChatMessage | null> => {
     if (!character) {
@@ -112,7 +112,7 @@ export const useChatStream = (character: Character | undefined, tone: ToneType =
     } finally {
       setIsLoading(false);
     }
-  }, [character, tone]);
+  }, [character, tone, makeApiCall]);
 
   const clearMessages = useCallback(() => {
     setMessages([]);

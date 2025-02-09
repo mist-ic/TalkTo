@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { useChatStream } from '@/hooks/useChatStream';
@@ -17,12 +17,21 @@ interface ChatHistories {
 }
 
 export default function ChatPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-950 flex items-center justify-center">
+      <div className="animate-pulse bg-gray-800 rounded-xl p-6">Loading...</div>
+    </div>}>
+      <ChatPageContent />
+    </Suspense>
+  );
+}
+
+function ChatPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [characters, setCharacters] = useState<Character[]>([]);
   const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
   const [selectedTone, setSelectedTone] = useState<ToneType>('original');
-  const [isLoading, setIsLoading] = useState(true);
   const [chatHistories, setChatHistories] = useState<ChatHistories>({});
   const [searchQuery, setSearchQuery] = useState('');
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
@@ -30,7 +39,7 @@ export default function ChatPage() {
 
   // Get chat stream for current character
   const { messages, isLoading: chatIsLoading, sendMessage: sendStreamMessage, clearMessages } = useChatStream(
-    selectedCharacter || undefined,
+    selectedCharacter,
     selectedTone
   );
 
@@ -88,8 +97,6 @@ export default function ChatPage() {
         }
       } catch (error) {
         console.error('Failed to load characters:', error);
-      } finally {
-        setIsLoading(false);
       }
     };
     
@@ -109,7 +116,17 @@ export default function ChatPage() {
         setChatHistories(prev => ({ ...prev, ...initialHistories }));
       }
     }
-  }, [characters]);
+  }, [characters, chatHistories]);
+
+  useEffect(() => {
+    if (selectedCharacter) {
+      // Only update when selectedCharacter is not null
+      setChatHistories((prev) => ({
+        ...prev,
+        [selectedCharacter.id]: prev[selectedCharacter.id] || [],
+      }));
+    }
+  }, [selectedCharacter]);
 
   const handleCharacterSelect = (character: Character) => {
     setSelectedCharacter(character);
@@ -259,16 +276,18 @@ export default function ChatPage() {
 
   return (
     <div className="min-h-screen bg-gray-950">
-      <ChatStream
-        messages={messages}
-        character={selectedCharacter}
-        isLoading={chatIsLoading}
-        onSendMessage={handleSendMessage}
-        onClose={() => router.push('/')}
-        tone={selectedTone}
-        onToneChange={handleToneSelect}
-        onStartNewChat={handleStartNewChat}
-      />
+      {selectedCharacter && (
+        <ChatStream
+          messages={messages}
+          character={selectedCharacter}
+          isLoading={chatIsLoading}
+          onSendMessage={handleSendMessage}
+          onClose={() => router.push('/')}
+          tone={selectedTone}
+          onToneChange={handleToneSelect}
+          onStartNewChat={handleStartNewChat}
+        />
+      )}
     </div>
   );
 } 

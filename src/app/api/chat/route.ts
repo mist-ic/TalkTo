@@ -5,10 +5,11 @@ import { GeminiClient } from '@/lib/geminiClient';
 const geminiClient = new GeminiClient(process.env.GEMINI_API_KEY || '');
 
 // Cache configuration
-const CACHE_CONTROL_HEADERS = {
-  'Cache-Control': 'public, s-maxage=1, stale-while-revalidate=59',
-  'CDN-Cache-Control': 'max-age=60',
-};
+// const CACHE_CONTROL_HEADERS = {
+//   'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+//   'Pragma': 'no-cache',
+//   'Expires': '0',
+// };
 
 export async function POST(request: Request) {
   try {

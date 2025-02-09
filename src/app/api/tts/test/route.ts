@@ -13,7 +13,7 @@ export async function GET() {
         { status: 500 }
       );
     }
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { status: 'error', message: 'Error testing Text-to-Speech API access' },
       { status: 500 }

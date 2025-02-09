@@ -173,9 +173,8 @@ export class GeminiClient {
 
     try {
       return await this.retryOperation(makeRequest);
-    } catch (error) {
-      const errorMessage = this.formatErrorMessage(error);
-      throw new Error(`Failed to communicate with Gemini API: ${errorMessage}`);
+    } catch {
+      throw new Error(`Failed to communicate with Gemini API`);
     }
   }
 
@@ -196,7 +195,7 @@ export class GeminiClient {
 
     try {
       return schema.parse(response);
-    } catch (error) {
+    } catch {
       throw new Error('Invalid response format from Gemini API');
     }
   }
