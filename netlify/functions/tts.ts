@@ -95,7 +95,9 @@ export const handler: Handler = async (event) => {
       throw new Error('No audio content received');
     }
 
-    // Return audio content directly with proper headers
+    // Convert Buffer to base64 string properly
+    const base64Audio = Buffer.from(response.audioContent).toString('base64');
+
     return {
       statusCode: 200,
       headers: {
@@ -103,7 +105,7 @@ export const handler: Handler = async (event) => {
         'Content-Type': 'audio/mpeg',
         'Content-Length': response.audioContent.length.toString(),
       },
-      body: response.audioContent.toString('base64'),
+      body: base64Audio,
       isBase64Encoded: true,
     };
   } catch (error) {

@@ -18,7 +18,6 @@ const nextConfig = {
   reactStrictMode: true,
   // Production optimizations
   productionBrowserSourceMaps: false, // Disable source maps in production
-  swcMinify: true, // Use SWC minification
   experimental: {
     optimizePackageImports: ['framer-motion', '@google-cloud/text-to-speech'],
   },
@@ -30,8 +29,8 @@ const nextConfig = {
         ...config.optimization,
         splitChunks: {
           chunks: 'all',
-          minSize: 4000, // Smaller minimum size
-          maxSize: 15000000, // 15MB max chunk size
+          minSize: 4000,
+          maxSize: 15000000,
           cacheGroups: {
             default: false,
             vendors: false,
