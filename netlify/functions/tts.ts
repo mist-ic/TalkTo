@@ -4,8 +4,31 @@ import { TextToSpeechClient } from '@google-cloud/text-to-speech';
 // Helper function to format private key
 const formatPrivateKey = (key: string | undefined) => {
   if (!key) return undefined;
-  // Handle both escaped and unescaped newlines
-  return key.replace(/\\n/g, '\n').replace(/\\\\n/g, '\n');
+  
+  // Remove any surrounding quotes
+  let formattedKey = key.replace(/^["']|["']$/g, '');
+  
+  // Replace escaped newlines with actual newlines
+  formattedKey = formattedKey.replace(/\\n/g, '\n');
+  
+  // Ensure the key has the correct header and footer
+  if (!formattedKey.includes('-----BEGIN PRIVATE KEY-----')) {
+    formattedKey = '-----BEGIN PRIVATE KEY-----\n' + formattedKey;
+  }
+  if (!formattedKey.includes('-----END PRIVATE KEY-----')) {
+    formattedKey = formattedKey + '\n-----END PRIVATE KEY-----';
+  }
+  
+  // Log the first and last few characters for debugging
+  console.log('Private key format check:', {
+    startsWithHeader: formattedKey.startsWith('-----BEGIN PRIVATE KEY-----'),
+    endsWithFooter: formattedKey.endsWith('-----END PRIVATE KEY-----'),
+    length: formattedKey.length,
+    firstChars: formattedKey.substring(0, 40) + '...',
+    lastChars: '...' + formattedKey.substring(formattedKey.length - 40),
+  });
+  
+  return formattedKey;
 };
 
 // Initialize client with better error handling
@@ -19,7 +42,8 @@ const getClient = () => {
       console.error('Missing credentials:', {
         hasPrivateKey: !!privateKey,
         hasClientEmail: !!clientEmail,
-        hasProjectId: !!projectId
+        hasProjectId: !!projectId,
+        privateKeyLength: privateKey?.length || 0,
       });
       throw new Error('Missing required Google Cloud credentials');
     }
