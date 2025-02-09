@@ -1,9 +1,8 @@
 'use client';
 
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AnimatedMessage } from '@/components/ui/AnimatedMessage';
-import { PhoneContainer } from '@/components/ui/PhoneContainer';
 import type { ChatMessage, Character, ToneType } from '@/types/character';
 
 interface ChatStreamProps {
@@ -14,7 +13,11 @@ interface ChatStreamProps {
   onClose: () => void;
   tone: ToneType;
   onToneChange: (tone: ToneType) => void;
+  onStartNewChat?: () => void;
 }
+
+// Tabs for the sidebar
+type SidebarTab = 'chat' | 'characters';
 
 export const ChatStream = ({ 
   messages, 
@@ -23,10 +26,12 @@ export const ChatStream = ({
   onSendMessage,
   onClose,
   tone,
-  onToneChange
+  onToneChange,
+  onStartNewChat
 }: ChatStreamProps) => {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const [activeTab, setActiveTab] = useState<SidebarTab>('chat');
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -45,76 +50,144 @@ export const ChatStream = ({
     }
   };
 
-  // Handle tone change
-  const handleToneChange = (newTone: ToneType) => {
-    console.log('Changing tone to:', newTone); // Debug log
-    onToneChange(newTone);
-  };
-
   return (
-    <PhoneContainer onClose={onClose}>
-      <div className="flex flex-col h-full">
-        {/* Chat Header */}
-        <div className="flex flex-col px-4 pb-2 border-b border-gray-800/50">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center">
-              <div className="w-10 h-10 rounded-full overflow-hidden relative mr-3">
-                <img
-                  src={character.imageUrl}
-                  alt={character.name}
-                  className="object-cover w-full h-full"
-                />
-              </div>
-              <div>
-                <h3 className="font-bold text-white">{character.name}</h3>
-                <p className="text-sm text-gray-400">{character.title}</p>
-              </div>
-            </div>
-            
-            {/* Close Button */}
-            <button
-              onClick={onClose}
-              className="p-2 text-gray-400 hover:text-white transition-colors"
-              aria-label="Close chat"
-            >
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-
-          {/* Tone Selector */}
-          <div className="flex gap-2 pb-2 overflow-x-auto scrollbar-none">
-            {(['original', 'millennial', 'genZ'] as const).map((t) => (
-              <button
-                key={t}
-                onClick={() => handleToneChange(t)}
-                className={`
-                  px-3 py-1 text-xs rounded-full whitespace-nowrap transition-colors
-                  ${tone === t 
-                    ? 'bg-blue-500 text-white' 
-                    : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700/50'}
-                `}
-              >
-                {t === 'original' ? 'Original' : t === 'millennial' ? 'Millennial' : 'Gen Z'}
-              </button>
-            ))}
-          </div>
+    <div className="fixed inset-0 bg-gray-950 flex">
+      {/* Sidebar */}
+      <div className="w-80 bg-gray-900 border-r border-gray-800 flex flex-col">
+        {/* Tabs */}
+        <div className="flex border-b border-gray-800">
+          <button
+            onClick={() => setActiveTab('chat')}
+            className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+              activeTab === 'chat'
+                ? 'text-white border-b-2 border-blue-500'
+                : 'text-gray-400 hover:text-gray-300'
+            }`}
+          >
+            Current Chat
+          </button>
+          <button
+            onClick={() => setActiveTab('characters')}
+            className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+              activeTab === 'characters'
+                ? 'text-white border-b-2 border-blue-500'
+                : 'text-gray-400 hover:text-gray-300'
+            }`}
+          >
+            Characters
+          </button>
         </div>
 
-        {/* Chat Messages */}
-        <div className="flex-1 overflow-y-auto px-4 py-2 space-y-4">
+        <div className="flex-1 overflow-y-auto">
+          {activeTab === 'chat' && (
+            <div className="p-6 space-y-6">
+              {/* New Chat Button */}
+              <button
+                onClick={onStartNewChat}
+                className="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center space-x-2"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                <span>New Chat</span>
+              </button>
+
+              {/* Current Character */}
+              <div className="bg-gray-800 rounded-lg p-4">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-12 h-12 rounded-full overflow-hidden">
+                    <img
+                      src={character.imageUrl}
+                      alt={character.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div>
+                    <h3 className="text-white font-medium">{character.name}</h3>
+                    <p className="text-gray-400 text-sm">{character.title}</p>
+                  </div>
+                </div>
+
+                {/* Tone Selection */}
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-white">Conversation Style:</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {(['original', 'millennial', 'genZ'] as const).map((t) => (
+                      <button
+                        key={t}
+                        onClick={() => onToneChange(t)}
+                        className={`
+                          px-3 py-2 rounded text-sm transition-colors
+                          ${tone === t 
+                            ? 'bg-blue-500 text-white' 
+                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}
+                        `}
+                      >
+                        {t === 'original' ? 'Original' : t === 'millennial' ? 'Millennial' : 'Gen Z'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Chat History */}
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-white">Chat History</p>
+                <div className="flex items-center justify-between text-sm text-gray-400 hover:bg-gray-800 p-2 rounded-lg">
+                  <div className="flex items-center space-x-2">
+                    <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                    <span>Current Session</span>
+                  </div>
+                  <span className="text-xs">{new Date().toLocaleDateString()}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'characters' && (
+            <div className="p-4">
+              <button
+                onClick={onStartNewChat}
+                className="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center space-x-2 mb-4"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                <span>Choose New Character</span>
+              </button>
+            </div>
+          )}
+        </div>
+
+        <div className="p-4 border-t border-gray-800">
+          <button
+            onClick={onClose}
+            className="w-full px-4 py-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors flex items-center justify-center space-x-2"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            <span>Close Chat</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Main Chat Area */}
+      <div className="flex-1 flex flex-col">
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-4">
           <AnimatePresence initial={false}>
             {messages.map((message) => (
-              <motion.div
+              <div
                 key={message.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                className={`
+                  flex items-start gap-4 
+                  ${message.role === 'assistant' ? 'bg-gray-900' : 'bg-gray-800'} 
+                  rounded-lg p-4
+                `}
               >
                 {message.role === 'assistant' && (
-                  <div className="w-8 h-8 rounded-full overflow-hidden mr-2 flex-shrink-0">
+                  <div className="w-8 h-8 rounded-full overflow-hidden shrink-0">
                     <img
                       src={character.imageUrl}
                       alt={character.name}
@@ -122,47 +195,40 @@ export const ChatStream = ({
                     />
                   </div>
                 )}
-                <div
-                  className={`
-                    max-w-[80%] rounded-2xl p-3
-                    ${message.role === 'user'
-                      ? 'bg-blue-600 text-white ml-12'
-                      : 'bg-gray-800/50 text-gray-100 mr-12'}
-                  `}
-                >
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-medium text-white">
+                      {message.role === 'assistant' ? character.name : 'You'}
+                    </span>
+                    <span className="text-xs text-gray-400">
+                      {new Date(message.timestamp).toLocaleTimeString()}
+                    </span>
+                  </div>
                   {message.role === 'assistant' ? (
-                    <AnimatedMessage content={message.content} />
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <AnimatedMessage content={message.content} />
+                    </motion.div>
                   ) : (
-                    <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                    <div className="text-white whitespace-pre-wrap break-words">{message.content}</div>
                   )}
-                  <span className="text-xs opacity-50 mt-1 block">
-                    {new Date(message.timestamp).toLocaleTimeString()}
-                  </span>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </AnimatePresence>
-          {isLoading && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="flex items-center space-x-2 text-gray-400"
-            >
-              <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
-              <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-100" />
-              <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-200" />
-            </motion.div>
-          )}
           <div ref={chatEndRef} />
         </div>
 
-        {/* Chat Input */}
-        <form onSubmit={handleSubmit} className="px-4 pt-2 pb-4 border-t border-gray-800/50">
-          <div className="flex space-x-2">
+        {/* Input Area */}
+        <div className="border-t border-gray-800 p-4">
+          <form onSubmit={handleSubmit} className="flex gap-4">
             <textarea
               ref={inputRef}
-              className="flex-1 bg-gray-800/50 text-white rounded-xl p-3 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               placeholder="Type your message..."
+              className="flex-1 bg-gray-800 text-white rounded-lg px-4 py-2 resize-none h-12 focus:outline-none focus:ring-2 focus:ring-blue-500"
               rows={1}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
@@ -175,18 +241,17 @@ export const ChatStream = ({
               type="submit"
               disabled={isLoading}
               className={`
-                px-4 rounded-xl bg-blue-600 text-white font-medium
-                hover:bg-blue-700 transition-colors
-                disabled:opacity-50 disabled:cursor-not-allowed
+                px-4 rounded-lg font-medium transition-colors
+                ${isLoading 
+                  ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                  : 'bg-blue-500 text-white hover:bg-blue-600'}
               `}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-              </svg>
+              Send
             </button>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
-    </PhoneContainer>
+    </div>
   );
 }; 

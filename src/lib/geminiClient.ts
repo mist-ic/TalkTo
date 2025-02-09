@@ -146,6 +146,10 @@ export class GeminiClient {
               parts: [{ text: context }]
             },
             {
+              role: "model",
+              parts: [{ text: "Understood. I will now respond in character." }]
+            },
+            {
               role: "user",
               parts: [{ text: message }]
             }

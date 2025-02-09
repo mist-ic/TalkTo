@@ -30,6 +30,7 @@ export async function POST(request: Request) {
     const response = await geminiClient.streamChat({
       message,
       context,
+      characterId,
     });
 
     // Get the response data
@@ -49,10 +50,6 @@ export async function POST(request: Request) {
           }]
         }
       }]
-    }, {
-      headers: {
-        'Content-Type': 'application/json',
-      }
     });
   } catch (error) {
     console.error('Chat API error:', error);
@@ -61,19 +58,13 @@ export async function POST(request: Request) {
         error: 'Failed to get response from AI',
         details: error instanceof Error ? error.message : 'Unknown error'
       }, 
-      { 
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      }
+      { status: 500 }
     );
   }
 }
 
-// Configure Cloudflare specific headers
+// Configure for edge runtime
 export const runtime = 'edge';
-export const preferredRegion = 'auto';
 
 // Add revalidation configuration
 export const revalidate = 60; // Revalidate every 60 seconds

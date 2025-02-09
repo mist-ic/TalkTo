@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import type { Character, ChatMessage, ToneType } from '@/types/character';
 
 interface GeminiResponse {
@@ -16,11 +16,22 @@ const RETRY_DELAY = 1000; // 1 second delay between retries
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-export const useChatStream = (character: Character, tone: ToneType = 'original') => {
+export const useChatStream = (character: Character | undefined, tone: ToneType = 'original') => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Clear messages when character changes
+  useEffect(() => {
+    if (character) {
+      setMessages([]);
+    }
+  }, [character?.id]);
+
   const makeApiCall = async (content: string, contextWithTone: string, attempt: number = 1): Promise<GeminiResponse> => {
+    if (!character) {
+      throw new Error('No character selected');
+    }
+
     try {
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -56,9 +67,23 @@ export const useChatStream = (character: Character, tone: ToneType = 'original')
   };
 
   const sendMessage = useCallback(async (content: string): Promise<ChatMessage | null> => {
+    if (!character) {
+      console.error('No character selected');
+      return null;
+    }
+
     setIsLoading(true);
 
     try {
+      // Add user message to messages state
+      const userMessage: ChatMessage = {
+        id: `user-${Date.now()}`,
+        role: 'user',
+        content: content,
+        timestamp: Date.now(),
+      };
+      setMessages(prev => [...prev, userMessage]);
+
       const toneModifier = character.toneModifiers?.[tone] || '';
       const contextWithTone = `${character.chat_context}\n\n${toneModifier}`;
 
@@ -89,9 +114,14 @@ export const useChatStream = (character: Character, tone: ToneType = 'original')
     }
   }, [character, tone]);
 
+  const clearMessages = useCallback(() => {
+    setMessages([]);
+  }, []);
+
   return {
     messages,
     isLoading,
     sendMessage,
+    clearMessages,
   };
 }; 
