@@ -1,8 +1,12 @@
+import bundleAnalyzer from '@next/bundle-analyzer';
+
+const withBundleAnalyzer = bundleAnalyzer({
+  enabled: process.env.ANALYZE === 'true',
+});
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Configure image domains if needed
   images: {
-    unoptimized: true, // Required for Cloudflare Pages
     remotePatterns: [
       {
         protocol: 'https',
@@ -15,55 +19,61 @@ const nextConfig = {
   // Production optimizations
   productionBrowserSourceMaps: false, // Disable source maps in production
   swcMinify: true, // Use SWC minification
+  experimental: {
+    optimizePackageImports: ['framer-motion', '@google-cloud/text-to-speech'],
+  },
   // Customize webpack config
   webpack: (config, { dev, isServer }) => {
-    // Only apply optimizations for client-side production builds
     if (!dev && !isServer) {
-      // Aggressive code splitting
-      config.optimization.splitChunks = {
-        chunks: 'all',
-        minSize: 10000,
-        maxSize: 20000000, // 20MB max chunk size
-        cacheGroups: {
-          default: false,
-          vendors: false,
-          framework: {
-            name: 'framework',
-            chunks: 'all',
-            test: /[\\/]node_modules[\\/](react|react-dom|framer-motion)[\\/]/,
-            priority: 40,
-            enforce: true
-          },
-          lib: {
-            test: /[\\/]node_modules[\\/]/,
-            name(module, chunks, cacheGroupKey) {
-              const moduleFileName = module
-                .identifier()
-                .split('/')
-                .reduceRight((item) => item);
-              return `${cacheGroupKey}-${moduleFileName}`;
+      // Aggressive code splitting configuration
+      config.optimization = {
+        ...config.optimization,
+        splitChunks: {
+          chunks: 'all',
+          minSize: 4000, // Smaller minimum size
+          maxSize: 15000000, // 15MB max chunk size
+          cacheGroups: {
+            default: false,
+            vendors: false,
+            framework: {
+              chunks: 'all',
+              name: 'framework',
+              test: /[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/,
+              priority: 40,
+              enforce: true,
             },
-            chunks: 'all',
-            priority: 30,
-            minChunks: 2,
-            reuseExistingChunk: true
-          },
-          commons: {
-            name: 'commons',
-            chunks: 'all',
-            minChunks: 2,
-            priority: 20
-          },
-          shared: {
-            name: false,
-            priority: 10,
-            minChunks: 2,
-            reuseExistingChunk: true
+            commons: {
+              name: 'commons',
+              chunks: 'all',
+              minChunks: 2,
+              priority: 20,
+            },
+            middleware: {
+              chunks: 'all',
+              name: 'middleware',
+              test: /[\\/]node_modules[\\/](swr|zod|@google-cloud)[\\/]/,
+              priority: 30,
+              enforce: true,
+            },
+            lib: {
+              test: /[\\/]node_modules[\\/]/,
+              chunks: 'async',
+              name(module, chunks, cacheGroupKey) {
+                const packageName = module.context.match(
+                  /[\\/]node_modules[\\/](.*?)([\\/]|$)/
+                )[1].replace('@', '');
+                return `${cacheGroupKey}.${packageName}`;
+              },
+              minChunks: 2,
+              priority: 10,
+              reuseExistingChunk: true,
+            }
           }
-        }
+        },
+        runtimeChunk: 'single'
       };
 
-      // Minimize all chunks
+      config.optimization.moduleIds = 'deterministic';
       config.optimization.minimize = true;
     }
     
@@ -93,4 +103,4 @@ const nextConfig = {
   },
 };
 
-export default nextConfig; 
+export default withBundleAnalyzer(nextConfig); 
