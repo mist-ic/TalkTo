@@ -1,33 +1,38 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Configure image domains if needed
   images: {
+    unoptimized: true, // Required for Cloudflare Pages
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'upload.wikimedia.org',
-        pathname: '/wikipedia/commons/**',
+        hostname: '**',
       },
-      {
-        protocol: 'https',
-        hostname: 'media.istockphoto.com',
-        pathname: '/id/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'i.pinimg.com',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 't4.ftcdn.net',
-        pathname: '/jpg/**',
-      }
     ],
-    domains: ['upload.wikimedia.org', 'media.istockphoto.com', 'i.pinimg.com', 't4.ftcdn.net']
   },
-  // Enable edge runtime for API routes
-  experimental: {
-    runtime: 'edge',
+  // Enable strict mode for better development
+  reactStrictMode: true,
+  // Customize headers for security
+  async headers() {
+    return [
+      {
+        source: '/api/:path*',
+        headers: [
+          {
+            key: 'Access-Control-Allow-Origin',
+            value: '*',
+          },
+          {
+            key: 'Access-Control-Allow-Methods',
+            value: 'GET, POST, OPTIONS',
+          },
+          {
+            key: 'Access-Control-Allow-Headers',
+            value: 'Content-Type',
+          },
+        ],
+      },
+    ];
   },
 };
 

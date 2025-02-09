@@ -4,6 +4,7 @@ import { useRef, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AnimatedMessage } from '@/components/ui/AnimatedMessage';
 import type { ChatMessage, Character, ToneType } from '@/types/character';
+import { useTextToSpeech } from '@/hooks/useTextToSpeech';
 
 interface ChatStreamProps {
   messages: ChatMessage[];
@@ -32,6 +33,7 @@ export const ChatStream = ({
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState<SidebarTab>('chat');
+  const { speak, stop, isPlaying } = useTextToSpeech();
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -210,7 +212,29 @@ export const ChatStream = ({
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.3 }}
                     >
-                      <AnimatedMessage content={message.content} />
+                      <div className="flex items-start gap-2">
+                        <AnimatedMessage content={message.content} />
+                        <button
+                          onClick={() => isPlaying ? stop() : speak(message.content)}
+                          className={`p-2 rounded-full transition-colors ${
+                            isPlaying 
+                              ? 'bg-blue-500 text-white hover:bg-blue-600' 
+                              : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                          }`}
+                          title={isPlaying ? 'Stop speaking' : 'Read aloud'}
+                        >
+                          {isPlaying ? (
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+                            </svg>
+                          ) : (
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                            </svg>
+                          )}
+                        </button>
+                      </div>
                     </motion.div>
                   ) : (
                     <div className="text-white whitespace-pre-wrap break-words">{message.content}</div>
