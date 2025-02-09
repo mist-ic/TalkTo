@@ -13,7 +13,6 @@ const worker = {
     // Handle API routes
     if (url.pathname.startsWith('/api/')) {
       try {
-        // Forward to Next.js API routes
         const response = await env.ASSETS.fetch(request);
         if (response.status === 404) {
           return new Response('API endpoint not found', { status: 404 });
@@ -29,7 +28,13 @@ const worker = {
     }
 
     // Default to serving the Next.js application
-    return env.ASSETS.fetch(request);
+    try {
+      const response = await env.ASSETS.fetch(request);
+      return response;
+    } catch (err) {
+      console.error('Application error:', err);
+      return new Response('Internal Server Error', { status: 500 });
+    }
   }
 };
 
