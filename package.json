@@ -6,7 +6,9 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "pages:build": "next build",
+    "pages:deploy": "next build && wrangler pages deploy .next"
   },
   "dependencies": {
     "@cloudflare/workers-types": "^4.20250204.0",
