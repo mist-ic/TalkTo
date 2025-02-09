@@ -10,21 +10,31 @@ const formatPrivateKey = (key: string | undefined) => {
 
 // Initialize client with better error handling
 const getClient = () => {
-  const privateKey = formatPrivateKey(process.env.GOOGLE_CLOUD_PRIVATE_KEY);
-  const clientEmail = process.env.GOOGLE_CLOUD_CLIENT_EMAIL;
-  const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID;
+  try {
+    const privateKey = formatPrivateKey(process.env.GOOGLE_CLOUD_PRIVATE_KEY);
+    const clientEmail = process.env.GOOGLE_CLOUD_CLIENT_EMAIL;
+    const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID;
 
-  if (!privateKey || !clientEmail || !projectId) {
-    throw new Error('Missing required Google Cloud credentials');
+    if (!privateKey || !clientEmail || !projectId) {
+      console.error('Missing credentials:', {
+        hasPrivateKey: !!privateKey,
+        hasClientEmail: !!clientEmail,
+        hasProjectId: !!projectId
+      });
+      throw new Error('Missing required Google Cloud credentials');
+    }
+
+    return new TextToSpeechClient({
+      credentials: {
+        client_email: clientEmail,
+        private_key: privateKey,
+      },
+      projectId: projectId,
+    });
+  } catch (error) {
+    console.error('Error initializing TTS client:', error);
+    throw error;
   }
-
-  return new TextToSpeechClient({
-    credentials: {
-      client_email: clientEmail,
-      private_key: privateKey,
-    },
-    projectId: projectId,
-  });
 };
 
 export async function POST(request: Request) {
@@ -35,13 +45,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Text is required' }, { status: 400 });
     }
 
+    console.log('Initializing TTS client...');
     const client = getClient();
+    console.log('TTS client initialized successfully');
 
+    console.log('Sending TTS request...');
     const [response] = await client.synthesizeSpeech({
       input: { text },
       voice: { languageCode: 'en-US', ssmlGender: 'NEUTRAL' },
       audioConfig: { audioEncoding: 'MP3' },
     });
+    console.log('TTS request completed successfully');
 
     const audioContent = response.audioContent;
     if (!audioContent) {
@@ -59,7 +73,8 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { 
         error: 'Failed to convert text to speech',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        details: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
       },
       { status: 500 }
     );

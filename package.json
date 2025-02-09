@@ -8,8 +8,7 @@
     "analyze": "cross-env ANALYZE=true next build",
     "start": "next start",
     "lint": "next lint",
-    "clean": "rimraf .next",
-    "postinstall": "node node_modules/@google-cloud/text-to-speech/build/src/postinstall.js"
+    "clean": "rimraf .next"
   },
   "dependencies": {
     "@google-cloud/text-to-speech": "^5.8.0",

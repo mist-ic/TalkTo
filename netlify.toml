@@ -5,6 +5,7 @@
 [build.environment]
   NEXT_TELEMETRY_DISABLED = "1"
   NODE_VERSION = "20"
+  NPM_FLAGS = "--no-optional"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
@@ -14,6 +15,7 @@
   # Increase timeout for TTS API
   node_bundler = "esbuild"
   external_node_modules = ["@google-cloud/text-to-speech"]
+  included_files = ["node_modules/@google-cloud/text-to-speech/**/*"]
 
 [[headers]]
   for = "/*"
