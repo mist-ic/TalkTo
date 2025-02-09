@@ -12,6 +12,7 @@ export const useTextToSpeech = () => {
         audio.currentTime = 0;
       }
 
+      console.log('Sending TTS request...');
       const response = await fetch('/.netlify/functions/tts', {
         method: 'POST',
         headers: {
@@ -26,12 +27,19 @@ export const useTextToSpeech = () => {
         throw new Error(errorData.details || 'Failed to convert text to speech');
       }
 
-      const { audioContent } = await response.json();
-      
-      // Convert base64 to blob
-      const audioBlob = await fetch(`data:audio/mp3;base64,${audioContent}`).then(res => res.blob());
+      // Get the audio data directly as a blob
+      const audioBlob = await response.blob();
+      console.log('Received audio blob:', audioBlob.size, 'bytes');
+
       const audioUrl = URL.createObjectURL(audioBlob);
       const newAudio = new Audio(audioUrl);
+
+      // Add error handling for audio loading
+      newAudio.onerror = (e) => {
+        console.error('Audio loading error:', e);
+        setIsPlaying(false);
+        URL.revokeObjectURL(audioUrl);
+      };
 
       newAudio.onended = () => {
         setIsPlaying(false);
@@ -45,6 +53,12 @@ export const useTextToSpeech = () => {
       newAudio.onplay = () => {
         setIsPlaying(true);
       };
+
+      // Wait for the audio to be loaded before playing
+      await new Promise((resolve, reject) => {
+        newAudio.oncanplaythrough = resolve;
+        newAudio.onerror = reject;
+      });
 
       setAudio(newAudio);
       await newAudio.play();

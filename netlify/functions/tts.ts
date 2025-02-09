@@ -4,6 +4,7 @@ import { TextToSpeechClient } from '@google-cloud/text-to-speech';
 // Helper function to format private key
 const formatPrivateKey = (key: string | undefined) => {
   if (!key) return undefined;
+  // Handle both escaped and unescaped newlines
   return key.replace(/\\n/g, '\n').replace(/\\\\n/g, '\n');
 };
 
@@ -23,6 +24,8 @@ const getClient = () => {
       throw new Error('Missing required Google Cloud credentials');
     }
 
+    console.log('Credentials found, initializing client...');
+    
     return new TextToSpeechClient({
       credentials: {
         client_email: clientEmail,
@@ -37,10 +40,26 @@ const getClient = () => {
 };
 
 export const handler: Handler = async (event) => {
-  // Only allow POST requests
+  // Enable CORS
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  };
+
+  // Handle preflight requests
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 204,
+      headers,
+      body: '',
+    };
+  }
+
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
+      headers,
       body: JSON.stringify({ error: 'Method not allowed' }),
     };
   }
@@ -51,6 +70,7 @@ export const handler: Handler = async (event) => {
     if (!text) {
       return {
         statusCode: 400,
+        headers,
         body: JSON.stringify({ error: 'Text is required' }),
       };
     }
@@ -59,11 +79,15 @@ export const handler: Handler = async (event) => {
     const client = getClient();
     console.log('TTS client initialized successfully');
 
-    console.log('Sending TTS request...');
+    console.log('Sending TTS request with text:', text.substring(0, 50) + '...');
     const [response] = await client.synthesizeSpeech({
       input: { text },
       voice: { languageCode: 'en-US', ssmlGender: 'NEUTRAL' },
-      audioConfig: { audioEncoding: 'MP3' },
+      audioConfig: { 
+        audioEncoding: 'MP3',
+        sampleRateHertz: 24000,
+        effectsProfileId: ['small-bluetooth-speaker-class-device'],
+      },
     });
     console.log('TTS request completed successfully');
 
@@ -71,22 +95,22 @@ export const handler: Handler = async (event) => {
       throw new Error('No audio content received');
     }
 
-    // Convert Buffer to base64
-    const audioBase64 = Buffer.from(response.audioContent).toString('base64');
-
+    // Return audio content directly with proper headers
     return {
       statusCode: 200,
       headers: {
-        'Content-Type': 'application/json',
+        ...headers,
+        'Content-Type': 'audio/mpeg',
+        'Content-Length': response.audioContent.length.toString(),
       },
-      body: JSON.stringify({ 
-        audioContent: audioBase64 
-      }),
+      body: response.audioContent.toString('base64'),
+      isBase64Encoded: true,
     };
   } catch (error) {
     console.error('Text-to-speech error:', error);
     return {
       statusCode: 500,
+      headers,
       body: JSON.stringify({
         error: 'Failed to convert text to speech',
         details: error instanceof Error ? error.message : 'Unknown error',
