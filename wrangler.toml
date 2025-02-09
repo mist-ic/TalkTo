@@ -11,6 +11,3 @@ bucket = ".next"
 [env.production]
 name = "talkto"
 route = "talkto.pages.dev/*"
-
-[build.upload]
-format = "service-worker"
