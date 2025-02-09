@@ -12,7 +12,7 @@ export const useTextToSpeech = () => {
         audio.currentTime = 0;
       }
 
-      const response = await fetch('/api/tts', {
+      const response = await fetch('/.netlify/functions/tts', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -21,10 +21,15 @@ export const useTextToSpeech = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to convert text to speech');
+        const errorData = await response.json();
+        console.error('TTS Error:', errorData);
+        throw new Error(errorData.details || 'Failed to convert text to speech');
       }
 
-      const audioBlob = await response.blob();
+      const { audioContent } = await response.json();
+      
+      // Convert base64 to blob
+      const audioBlob = await fetch(`data:audio/mp3;base64,${audioContent}`).then(res => res.blob());
       const audioUrl = URL.createObjectURL(audioBlob);
       const newAudio = new Audio(audioUrl);
 
@@ -46,6 +51,7 @@ export const useTextToSpeech = () => {
     } catch (error) {
       console.error('Error playing audio:', error);
       setIsPlaying(false);
+      throw error;
     }
   }, [audio]);
 

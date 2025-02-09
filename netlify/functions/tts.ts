@@ -1,10 +1,9 @@
+import { Handler } from '@netlify/functions';
 import { TextToSpeechClient } from '@google-cloud/text-to-speech';
-import { NextResponse } from 'next/server';
 
 // Helper function to format private key
 const formatPrivateKey = (key: string | undefined) => {
   if (!key) return undefined;
-  // Replace literal '\n' with actual newlines and handle double-escaped newlines
   return key.replace(/\\n/g, '\n').replace(/\\\\n/g, '\n');
 };
 
@@ -37,12 +36,23 @@ const getClient = () => {
   }
 };
 
-export async function POST(request: Request) {
+export const handler: Handler = async (event) => {
+  // Only allow POST requests
+  if (event.httpMethod !== 'POST') {
+    return {
+      statusCode: 405,
+      body: JSON.stringify({ error: 'Method not allowed' }),
+    };
+  }
+
   try {
-    const { text } = await request.json();
+    const { text } = JSON.parse(event.body || '{}');
 
     if (!text) {
-      return NextResponse.json({ error: 'Text is required' }, { status: 400 });
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ error: 'Text is required' }),
+      };
     }
 
     console.log('Initializing TTS client...');
@@ -57,26 +67,31 @@ export async function POST(request: Request) {
     });
     console.log('TTS request completed successfully');
 
-    const audioContent = response.audioContent;
-    if (!audioContent) {
+    if (!response.audioContent) {
       throw new Error('No audio content received');
     }
 
-    return new NextResponse(audioContent, {
+    // Convert Buffer to base64
+    const audioBase64 = Buffer.from(response.audioContent).toString('base64');
+
+    return {
+      statusCode: 200,
       headers: {
-        'Content-Type': 'audio/mpeg',
+        'Content-Type': 'application/json',
       },
-    });
+      body: JSON.stringify({ 
+        audioContent: audioBase64 
+      }),
+    };
   } catch (error) {
     console.error('Text-to-speech error:', error);
-    // More detailed error response
-    return NextResponse.json(
-      { 
+    return {
+      statusCode: 500,
+      body: JSON.stringify({
         error: 'Failed to convert text to speech',
         details: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined
-      },
-      { status: 500 }
-    );
+        stack: error instanceof Error ? error.stack : undefined,
+      }),
+    };
   }
-} 
+}; 
