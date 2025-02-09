@@ -5,30 +5,38 @@ import { TextToSpeechClient } from '@google-cloud/text-to-speech';
 const formatPrivateKey = (key: string | undefined) => {
   if (!key) return undefined;
   
-  // Remove any surrounding quotes
-  let formattedKey = key.replace(/^["']|["']$/g, '');
-  
-  // Replace escaped newlines with actual newlines
-  formattedKey = formattedKey.replace(/\\n/g, '\n');
-  
-  // Ensure the key has the correct header and footer
-  if (!formattedKey.includes('-----BEGIN PRIVATE KEY-----')) {
-    formattedKey = '-----BEGIN PRIVATE KEY-----\n' + formattedKey;
+  try {
+    // Remove any surrounding quotes and whitespace
+    let formattedKey = key.trim().replace(/^["']|["']$/g, '');
+    
+    // Split by escaped newlines and filter out empty lines
+    const lines = formattedKey.split('\\n').filter(line => line.trim());
+    
+    // Reconstruct the key with proper formatting
+    formattedKey = lines.join('\n');
+    
+    // Ensure proper header and footer
+    if (!formattedKey.startsWith('-----BEGIN PRIVATE KEY-----')) {
+      formattedKey = '-----BEGIN PRIVATE KEY-----\n' + formattedKey;
+    }
+    if (!formattedKey.endsWith('-----END PRIVATE KEY-----')) {
+      formattedKey = formattedKey + '\n-----END PRIVATE KEY-----';
+    }
+    
+    // Log key structure for debugging
+    const keyLines = formattedKey.split('\n');
+    console.log('Key structure check:', {
+      totalLines: keyLines.length,
+      hasCorrectHeader: keyLines[0] === '-----BEGIN PRIVATE KEY-----',
+      hasCorrectFooter: keyLines[keyLines.length - 1] === '-----END PRIVATE KEY-----',
+      middleLineLength: keyLines.length > 2 ? keyLines[1].length : 0,
+    });
+    
+    return formattedKey;
+  } catch (error) {
+    console.error('Error formatting private key:', error);
+    throw error;
   }
-  if (!formattedKey.includes('-----END PRIVATE KEY-----')) {
-    formattedKey = formattedKey + '\n-----END PRIVATE KEY-----';
-  }
-  
-  // Log the first and last few characters for debugging
-  console.log('Private key format check:', {
-    startsWithHeader: formattedKey.startsWith('-----BEGIN PRIVATE KEY-----'),
-    endsWithFooter: formattedKey.endsWith('-----END PRIVATE KEY-----'),
-    length: formattedKey.length,
-    firstChars: formattedKey.substring(0, 40) + '...',
-    lastChars: '...' + formattedKey.substring(formattedKey.length - 40),
-  });
-  
-  return formattedKey;
 };
 
 // Initialize client with better error handling
@@ -48,7 +56,13 @@ const getClient = () => {
       throw new Error('Missing required Google Cloud credentials');
     }
 
-    console.log('Credentials found, initializing client...');
+    console.log('Credentials found, creating client with:', {
+      clientEmail,
+      projectId,
+      privateKeyLength: privateKey.length,
+      privateKeyStart: privateKey.substring(0, 40) + '...',
+      privateKeyEnd: '...' + privateKey.substring(privateKey.length - 40),
+    });
     
     return new TextToSpeechClient({
       credentials: {
