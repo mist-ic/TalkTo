@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { useChatStream } from '@/hooks/useChatStream';
 import type { Character, ToneType, ChatMessage } from '@/types/character';
+import Image from 'next/image';
 
 // Dynamically import components
 const ChatStream = dynamic(() => import('@/components/ChatStream').then(mod => mod.ChatStream), {
@@ -227,13 +228,13 @@ function ChatPageContent() {
                     onClick={() => handleCharacterSelect(character)}
                     className="flex items-center gap-3 p-3 bg-gray-900 rounded-lg hover:bg-gray-800 cursor-pointer transition-colors"
                   >
-                    <div className="w-12 h-12 rounded-full overflow-hidden">
-                      <img
-                        src={character.imageUrl}
-                        alt={character.name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
+                    <Image
+                      src={character.imageUrl || ''}
+                      alt={character.name || 'Character'}
+                      width={48}
+                      height={48}
+                      className="w-12 h-12 rounded-full object-cover"
+                    />
                     <div>
                       <h3 className="text-white font-medium">{character.name}</h3>
                       <p className="text-gray-400 text-sm">{character.title}</p>
@@ -254,13 +255,13 @@ function ChatPageContent() {
                   onClick={() => handleCharacterSelect(character)}
                   className="flex items-center gap-3 p-3 bg-gray-900 rounded-lg hover:bg-gray-800 cursor-pointer transition-colors"
                 >
-                  <div className="w-12 h-12 rounded-full overflow-hidden">
-                    <img
-                      src={character.imageUrl}
-                      alt={character.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
+                  <Image
+                    src={character.imageUrl || ''}
+                    alt={character.name || 'Character'}
+                    width={48}
+                    height={48}
+                    className="w-12 h-12 rounded-full object-cover"
+                  />
                   <div>
                     <h3 className="text-white font-medium">{character.name}</h3>
                     <p className="text-gray-400 text-sm">{character.title}</p>

@@ -54,14 +54,15 @@ export const useTextToSpeech = () => {
       console.log('Created new Audio element');
 
       // Add error handling for audio loading
-      newAudio.onerror = (e) => {
-        console.error('Audio loading error:', e);
-        const error = e.currentTarget as HTMLAudioElement;
-        console.error('Audio error details:', {
-          error: error.error,
-          networkState: error.networkState,
-          readyState: error.readyState,
-        });
+      newAudio.onerror = () => {
+        console.error('Audio loading error');
+        if (newAudio.error) {
+          console.error('Audio error details:', {
+            error: newAudio.error,
+            networkState: newAudio.networkState,
+            readyState: newAudio.readyState,
+          });
+        }
         setIsPlaying(false);
         URL.revokeObjectURL(audioUrl);
       };

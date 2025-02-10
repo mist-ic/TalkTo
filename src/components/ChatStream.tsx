@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { AnimatedMessage } from '@/components/ui/AnimatedMessage';
 import type { ChatMessage, Character, ToneType } from '@/types/character';
 import { useTextToSpeech } from '@/hooks/useTextToSpeech';
+import Image from 'next/image';
 
 interface ChatStreamProps {
   messages: ChatMessage[];
@@ -97,13 +98,13 @@ export const ChatStream = ({
               {/* Current Character */}
               <div className="bg-gray-800 rounded-lg p-4">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-12 h-12 rounded-full overflow-hidden">
-                    <img
-                      src={character?.imageUrl}
-                      alt={character?.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
+                  <Image
+                    src={character?.imageUrl || ''}
+                    alt={character?.name || 'Character'}
+                    width={40}
+                    height={40}
+                    className="w-10 h-10 rounded-full object-cover"
+                  />
                   <div>
                     <h3 className="text-white font-medium">{character?.name}</h3>
                     <p className="text-gray-400 text-sm">{character?.title}</p>
@@ -190,10 +191,12 @@ export const ChatStream = ({
               >
                 {message.role === 'assistant' && (
                   <div className="w-8 h-8 rounded-full overflow-hidden shrink-0">
-                    <img
-                      src={character?.imageUrl}
-                      alt={character?.name}
-                      className="w-full h-full object-cover"
+                    <Image
+                      src={character?.imageUrl || ''}
+                      alt={character?.name || 'Character'}
+                      width={40}
+                      height={40}
+                      className="w-10 h-10 rounded-full object-cover"
                     />
                   </div>
                 )}
