@@ -5,10 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "analyze": "cross-env ANALYZE=true next build",
     "start": "next start",
-    "lint": "next lint",
-    "clean": "rimraf .next"
+    "lint": "next lint"
   },
   "dependencies": {
     "@google-cloud/text-to-speech": "^5.8.0",
@@ -24,15 +22,12 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
-    "@next/bundle-analyzer": "^15.1.6",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "cross-env": "^7.0.3",
     "eslint": "^9",
     "eslint-config-next": "15.1.6",
     "postcss": "^8",
-    "rimraf": "^5.0.10",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"
   }
